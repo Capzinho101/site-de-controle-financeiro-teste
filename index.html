@@ -164,7 +164,7 @@ function logout(){
 }
 
 // AUTH
-auth.onAuthStateChanged(user => {
+auth.onAuthStateChanged(async user => {
 
   const side = document.getElementById("userSidebar");
   const main = document.getElementById("userMain");
@@ -175,10 +175,16 @@ auth.onAuthStateChanged(user => {
     side.innerText = "Logado: " + user.email;
     main.innerText = "Logado: " + user.email;
 
-    load();
+    await load(); // 🔥 garante carregar antes de renderizar
+
   } else {
+    userId = null;
     side.innerText = "Faça login";
     main.innerText = "Faça login";
+
+    // limpa dados locais quando desloga
+    transactions = {};
+    render();
   }
 });
 
@@ -256,24 +262,34 @@ function del(id){
 }
 
 // SAVE
-function save(){
+async function save(){
   if(!userId) return;
-  db.collection("users").doc(userId).set({
+
+  await db.collection("users").doc(userId).set({
     transactions,
     salary,
     cycle
-  });
+  }, { merge: true }); // 🔥 evita apagar dados antigos
 }
 
 // LOAD
 async function load(){
+  if(!userId) return;
+
   const doc = await db.collection("users").doc(userId).get();
+
   if(doc.exists){
     const data = doc.data();
+
     transactions = data.transactions || {};
     salary = data.salary || 0;
     cycle = data.cycle || 1;
   }
+
+  // atualiza inputs visuais
+  document.getElementById("salary").value = salary;
+  document.getElementById("cycle").value = cycle;
+
   render();
 }
 
