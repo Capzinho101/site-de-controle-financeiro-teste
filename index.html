@@ -152,13 +152,21 @@ function login(){
   const provider = new firebase.auth.GoogleAuthProvider();
 
   auth.signInWithPopup(provider)
+    .then(result => {
+      console.log("Login OK");
+    })
     .catch(err => {
-      if (err.code === "auth/popup-blocked") {
+
+      console.log("Erro login:", err);
+
+      // 🔥 fallback se popup for bloqueado
+      if (err.code === "auth/popup-blocked" || err.code === "auth/cancelled-popup-request") {
         auth.signInWithRedirect(provider);
+      } else {
+        alert("Erro ao logar: " + err.message);
       }
     });
 }
-
 function logout(){
   auth.signOut();
 }
