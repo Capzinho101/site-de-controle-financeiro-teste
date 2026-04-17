@@ -70,6 +70,7 @@ Sair
 <option>💡 Luz</option>
 <option>💰 Saldo</option>
 <option>📦 Outros</option>
+<option>📉 Dívidas</option>
 </select>
 
 <input id="value" type="number"
@@ -208,7 +209,7 @@ function setCycle(){
 function add(){
 
   const desc = document.getElementById("desc").value;
-  const value = parseFloat(document.getElementById("value").value);
+  let value = parseFloat(document.getElementById("value").value);
   const category = document.getElementById("category").value;
 
   if(!desc || isNaN(value)) return;
@@ -217,18 +218,23 @@ function add(){
 
   if(!transactions[key]) transactions[key] = [];
 
+  // 🔥 Se for dívida, força valor negativo
+  if(category === "📉 Dívidas"){
+    value = -Math.abs(value);
+  }
+
   transactions[key].push({
     id: Date.now(),
     desc,
     value,
     category,
-    paid:false
+    paid: category === "📉 Dívidas" ? false : true // só dívida começa pendente
   });
 
   save();
   render();
 }
-
+  
 // TOGGLE
 function togglePaid(id){
 
@@ -295,23 +301,31 @@ function render(){
 
   current.forEach(t=>{
 
-    if(t.value > 0){
-      income += t.value;
+if(t.value > 0){
+  income += t.value;
+} else {
+
+  if(t.category === "📉 Dívidas"){
+    if(t.paid){
+      expenses += t.value;
     } else {
-      if(t.paid){
-        expenses += t.value;
-      } else {
-        debt += Math.abs(t.value);
-      }
+      debt += Math.abs(t.value);
     }
+  } else {
+    expenses += t.value;
+  }
 
-    let status="";
+}
 
-    if(t.value < 0 && !t.paid)
-      status=`<span class="text-red-400 font-bold">PENDENTE</span>`;
+   let status="";
 
-    if(t.paid)
-      status=`<span class="text-green-400 font-bold">PAGO</span>`;
+if(t.category === "📉 Dívidas"){
+  if(!t.paid){
+    status=`<span class="text-red-400 font-bold ml-2">PENDENTE</span>`;
+  } else {
+    status=`<span class="text-green-400 font-bold ml-2">PAGO</span>`;
+  }
+}
 
     list.innerHTML+=`
     <div class="bg-gray-800 p-2 rounded flex justify-between">
@@ -319,10 +333,10 @@ function render(){
         ${t.desc} (${t.category}) - R$ ${t.value}
         ${status}
       </div>
-      <div class="flex gap-2">
-        <button onclick="togglePaid(${t.id})">✔</button>
-        <button onclick="del(${t.id})">❌</button>
-      </div>
+<div class="flex gap-2">
+  ${t.category === "📉 Dívidas" ? `<button onclick="togglePaid(${t.id})">✔</button>` : ""}
+  <button onclick="del(${t.id})">❌</button>
+</div>
     </div>`;
   });
 
