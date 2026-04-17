@@ -37,21 +37,18 @@ Sair
 <p id="userSidebar" class="text-xs mt-2"></p>
 </div>
 
-<!-- 💰 SALÁRIO -->
 <div class="mb-4">
 <p class="text-sm">💰 Salário inicial</p>
 <input id="salary" type="number" class="bg-gray-800 p-2 w-full rounded">
 <button onclick="setSalary()" class="bg-blue-600 w-full p-2 rounded mt-2">Salvar</button>
 </div>
 
-<!-- 📅 CICLO -->
 <div class="mb-4">
 <p class="text-sm">📅 Dia do ciclo</p>
 <input id="cycle" type="number" min="1" max="31" class="bg-gray-800 p-2 w-full rounded">
 <button onclick="setCycle()" class="bg-purple-600 w-full p-2 rounded mt-2">Salvar</button>
 </div>
 
-<!-- 📊 HISTÓRICO -->
 <div>
 <p class="text-sm font-bold mb-2">📊 Histórico mensal</p>
 <div id="history" class="text-xs space-y-1"></div>
@@ -127,13 +124,12 @@ const db = firebase.firestore();
 
 auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
 
-// DADOS
 let userId = null;
 let transactions = {};
 let salary = 0;
 let cycle = 1;
 
-// 🔥 CICLO AUTOMÁTICO
+// CICLO
 function getCycleKey() {
   const today = new Date();
   let month = today.getMonth() + 1;
@@ -299,15 +295,19 @@ function render(){
 
   current.forEach(t=>{
 
-    if(t.value>0) income+=t.value;
-    else {
-      expenses+=t.value;
-      if(!t.paid) debt += Math.abs(t.value);
+    if(t.value > 0){
+      income += t.value;
+    } else {
+      if(t.paid){
+        expenses += t.value;
+      } else {
+        debt += Math.abs(t.value);
+      }
     }
 
     let status="";
 
-    if(t.value<0 && !t.paid)
+    if(t.value < 0 && !t.paid)
       status=`<span class="text-red-400 font-bold">PENDENTE</span>`;
 
     if(t.paid)
